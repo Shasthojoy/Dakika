@@ -4,22 +4,25 @@
 
         <div class="nav">
             <div class="audio-recorder" style="height: 79px; border-bottom: 1px solid #e7e6e8;">
-<div v-if="filename != null" >
-                <div style="text-align: center; margin: 0 auto; padding-top: 7px;">
-                    <div v-if="recording == false " v-on:click="startAudioRecording" id="stop"><i
-                            class="big green play icon"></i>
+                <div v-if="filename != null">
+                    <div style="text-align: center; margin: 0 auto; padding-top: 7px;">
+                        <div v-if="recording == false " v-on:click="startAudioRecording" id="stop"><i
+                                class="big green play icon"></i>
+                        </div>
+                        <div v-else v-on:click="stopAudioRecording" id="start"><i class="big stop red icon"></i></div>
                     </div>
-                    <div v-else v-on:click="stopAudioRecording" id="start"><i class="big stop red icon"></i></div>
+                    <div v-if="recording" class="blink_me"
+                         style="text-align: center; margin: 0 auto; padding-top: 1px;">
+                        Recording
+                    </div>
+                    <div class="" style="text-align: center;">
+                        {{recording_filenames.length}} - Meeting Recording <span
+                            v-if="recording_filenames.length<2">Clip</span> <span v-else>Clips</span>
+                    </div>
                 </div>
-                <div v-if="recording" class="blink_me" style="text-align: center; margin: 0 auto; padding-top: 1px;">
-                    Recording
+                <div style="padding: 10px; padding-top: 30px; text-align: center" v-else>
+                    Open A new Minute File to start recording
                 </div>
-                <div class="" style="text-align: center;">
-                    {{recording_filenames.length}} - Meeting Recording <span
-                        v-if="recording_filenames.length<2">Clip</span> <span v-else>Clips</span>
-                </div>
-</div>
-                <div style="padding: 10px; padding-top: 30px; text-align: center" v-else >Open A new Minute File to start recording</div>
             </div>
 
             <attendant :saved_attendants="old_attendants" :filename="filename" v-model="attendants"></attendant>
@@ -163,7 +166,12 @@
                         return 0;
                     }
 
-                    var liveObj = {recording_filenames: x.recording_filenames,agenda: x.agenda, attendants: x.attendants, minutes: x.minutes}
+                    var liveObj = {
+                        recording_filenames: x.recording_filenames,
+                        agenda: x.agenda,
+                        attendants: x.attendants,
+                        minutes: x.minutes
+                    }
                     if (JSON.stringify(liveObj) == JSON.stringify(obj)) {
                         document.title = 'Dakika : ' + x.filename.split('\\').pop().split('/').pop();
                     } else {
@@ -278,8 +286,23 @@
                 } catch (error) {
                     console.log(error)
                     // if there was some kind of error, return the passed in defaults instead.
-
                 }
+
+                var x = this;
+                var axios = require('axios');
+                const settings = require('electron-settings');
+                var token = settings.get('token');
+                axios.defaults.headers.post['Authorization'] = 'Bearer ' + JSON.parse(token).access_token;
+                axios.post('http://dakika.app/api/minutes', {
+                    meetingId: 1,
+                    agenda: x.agenda,
+                    attendants: x.attendants,
+                    minutes: x.minutes
+                }).then(function (response) {
+                    console.log(response.data)
+                }).catch(function (error) {
+                    console.log(error);
+                });
 
             },
             saveFileDebounce: debounce(function () {
@@ -422,7 +445,7 @@
         background: -o-linear-gradient(272deg, rgba(250, 250, 250, 1) 0%, rgba(255, 255, 255, 1) 100%); /* opera 11.10+ */
         background: -ms-linear-gradient(272deg, rgba(250, 250, 250, 1) 0%, rgba(255, 255, 255, 1) 100%); /* ie10+ */
         background: linear-gradient(178deg, rgba(250, 250, 250, 1) 0%, rgba(255, 255, 255, 1) 100%); /* w3c */
-        z-index: 1000;
+        z-index: 20;
 
     }
 

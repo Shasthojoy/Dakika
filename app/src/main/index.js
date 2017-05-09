@@ -85,7 +85,10 @@ function createWindow() {
         'minHeight': 600,
         'minWidth': 1200,
         icon: icons,
-        experimentalFeatures: true
+        experimentalFeatures: true,
+        webPreferences: {
+            webSecurity: false
+        }
     })
 
     mainWindow.on('close', function (e) {
